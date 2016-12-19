@@ -37,6 +37,12 @@ module TweetStream
                         :timeline_status,
                         :anything,
                         :no_data_received,
+                        :service_unavailable,
+                        :forbidden,
+                        :not_found,
+                        :not_acceptable,
+                        :too_long,
+                        :range_unacceptable,
                         :status_withheld,
                         :user_withheld].freeze unless defined?(OPTION_CALLBACKS)
 
@@ -246,6 +252,30 @@ module TweetStream
     # object is returned to allow for chaining.
     def on_unauthorized(&block)
       on('unauthorized', &block)
+    end
+
+    def on_forbidden(&block)
+      on('forbidden', &block)
+    end
+
+    def on_service_unavailable(&block)
+      on('service_unavailable', &block)
+    end
+
+    def on_not_found(&block)
+      on('not_found', &block)
+    end
+
+    def on_not_acceptable(&block)
+      on('not_acceptable', &block)
+    end
+
+    def on_too_long(&block)
+      on('too_long', &block)
+    end
+
+    def on_range_unacceptable(&block)
+      on('range_unacceptable', &block)
     end
 
     # Set a Proc to be run when a direct message is encountered in the
@@ -464,6 +494,13 @@ module TweetStream
       @stream.on_reconnect do |timeout, retries|
         invoke_callback(callbacks['reconnect'], timeout, retries)
       end
+
+      @stream.on_service_unavailable { invoke_callback(callbacks['service_unavailable']) }
+      @stream.on_not_found { invoke_callback(callbacks['not_found']) }
+      @stream.on_forbidden { invoke_callback(callbacks['forbidden']) }
+      @stream.on_not_acceptable { invoke_callback(callbacks['not_acceptable']) }
+      @stream.on_too_long { invoke_callback(callbacks['too_long']) }
+      @stream.on_range_unacceptable { invoke_callback(callbacks['range_unacceptable']) }
 
       @stream.on_max_reconnects do |timeout, retries|
         fail TweetStream::ReconnectError.new(timeout, retries)
